@@ -74,32 +74,15 @@ function traverseInOrder(node, callback) {
 // BST rendering code
 // ---------------------------------------------------------------------------------------
 
-function widthOfSubtree(node) {
-	if (node.left == null && node.right == null) {
-		return 1;
-	}
-	var width = 0;
-	if (node.left != null) width += widthOfSubtree(node.left);
-	if (node.right != null) width += widthOfSubtree(node.right);
-	return width;
-}
-
 function layoutSubtree(node, nodeY, left, right) {
 	node.locX = (left + right) / 2;
 	node.locY = nodeY;
-	var parentWidth = widthOfSubtree(node);
-	var x = left;
+	var space = (right - left) / 2;
 	if (node.left != null) {
-		var fraction = widthOfSubtree(node.left) / parentWidth;
-		var space = fraction * (right - left);
-		layoutSubtree(node.left, nodeY + levelSeparation(), x, x + space);
-		x += space;
+		layoutSubtree(node.left, nodeY + levelSeparation(), left, left + space);
 	}
 	if (node.right != null) {
-		var fraction = widthOfSubtree(node.right) / parentWidth;
-		var space = fraction * (right - left);
-		layoutSubtree(node.right, nodeY + levelSeparation(), x, x + space);
-		x += space;
+		layoutSubtree(node.right, nodeY + levelSeparation(), left + space, left + 2 * space);
 	}
 }
 
