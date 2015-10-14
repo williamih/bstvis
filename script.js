@@ -4,9 +4,14 @@ function BSTNode(value) {
 	this.right = null;
 	this.locX = 0;
 	this.locY = 0;
+	this.oldLocX = 0;
+	this.oldLocY = 0;
+	this.animLocX = 0;
+	this.animLocY = 0;
 }
 
 var root = null;
+var animTimeMs = 0;
 
 // ---------------------------------------------------------------------------------------
 // Constants
@@ -18,6 +23,14 @@ function levelSeparation() {
 
 function nodeRadius() {
 	return 25;
+}
+
+function animDurationMs() {
+	return 500;
+}
+
+function animIntervalMs() {
+	return 16;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -92,8 +105,8 @@ function layoutSubtree(node, nodeY, left, right) {
 
 function drawLineBetweenNodes(context, parent, child) {
 	context.beginPath();
-	context.moveTo(parent.locX, parent.locY);
-	context.lineTo(child.locX, child.locY);
+	context.moveTo(parent.animLocX, parent.animLocY);
+	context.lineTo(child.animLocX, child.animLocY);
 	context.lineWidth = 1;
 	context.strokeStyle = "#000000";
 	context.stroke();
@@ -102,7 +115,12 @@ function drawLineBetweenNodes(context, parent, child) {
 function displayBST(canvas, context) {
 	if (root == null) return;
 
-	layoutSubtree(root, 50, 50, canvas.width);
+	traverseInOrder(root, function(node) {
+		var t = animTimeMs / animDurationMs();
+		t = 3*t*t - 2*t*t*t;
+		node.animLocX = (1 - t) * node.oldLocX + t * node.locX;
+		node.animLocY = (1 - t) * node.oldLocY + t * node.locY;
+	});
 
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	traverseInOrder(root, function(node) {
@@ -111,7 +129,7 @@ function displayBST(canvas, context) {
 	});
 	traverseInOrder(root, function(node) {
 		context.beginPath();
-		context.arc(node.locX, node.locY, nodeRadius(), 0, 2 * Math.PI);
+		context.arc(node.animLocX, node.animLocY, nodeRadius(), 0, 2 * Math.PI);
 		context.fillStyle = "#FFFFFF";
 		context.fill();
 		context.lineWidth = 2;
@@ -120,13 +138,35 @@ function displayBST(canvas, context) {
 
 		context.font = "10pt helvetica";
 		context.fillStyle = "#000000";
-		context.fillText(node.value, node.locX, node.locY);
+		context.fillText(node.value, node.animLocX, node.animLocY);
 	});
+
+	if (animTimeMs < animDurationMs()) {
+		animTimeMs += animIntervalMs();
+		if (animTimeMs > animDurationMs()) {
+			animTimeMs = animDurationMs();
+		}
+		setTimeout(function() { displayBST(canvas, context) }, animIntervalMs());
+	}
 }
 
 // ---------------------------------------------------------------------------------------
 // UI code
 // ---------------------------------------------------------------------------------------
+
+function beginAnimation() {
+	var canvas = document.getElementById("bstCanvas");
+	var ctx = canvas.getContext("2d");
+
+	traverseInOrder(root, function(node) {
+		node.oldLocX = node.locX;
+		node.oldLocY = node.locY;
+	});
+	layoutSubtree(root, nodeRadius() * 2, nodeRadius() * 2, canvas.width);
+	animTimeMs = 0;
+
+	displayBST(canvas, ctx);
+}
 
 function addNode() {
 	var nodeValueInput = document.getElementById("nodeValueInput");
@@ -141,9 +181,7 @@ function addNode() {
 
 	internalAddNode(node);
 
-	var canvas = document.getElementById("bstCanvas");
-	var ctx = canvas.getContext("2d");
-	displayBST(canvas, ctx);
+	beginAnimation();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
