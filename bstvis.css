@@ -1,0 +1,17 @@
+body {
+	margin: 0 px;
+	padding: 0 px;
+}
+
+#wrapper {
+	width: 200 px;
+	margin: 0 auto;
+}
+
+h1 {
+	font-family: helvetica;
+}
+
+#bstCanvas {
+	display: block;
+}
